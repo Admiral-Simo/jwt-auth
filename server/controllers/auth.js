@@ -1,6 +1,7 @@
 const db = require("../connect");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const data = require("../data");
 
 const getUsers = (req, res) => {
   const sqlUsers = "SELECT * FROM user";
@@ -26,14 +27,15 @@ const Register = (req, res) => {
       res.status(401).end("username already taken");
     } else {
       // register it
-      bcrypt.hash(password, 10).then((hash) => {
-        db.query(sqlUsersInsert, [username, hash], (err, result) => {
-          if (!err) {
-            res.end("successfully created");
-          } else {
-            res.status(401).end("something went wrong");
-          }
-        });
+      const hash = bcrypt.hashSync(password, 10);
+
+      db.query(sqlUsersInsert, [username, hash], (err, result) => {
+        if (!err) {
+          const token = jwt.sign({ username: username }, "STRONGPASSWORD123");
+          res.status(200).send({ msg: "successfully created", token: token });
+        } else {
+          res.status(401).end("something went wrong");
+        }
       });
     }
   });
@@ -48,17 +50,16 @@ const Login = (req, res) => {
 
   db.query(sqlUsers, [username], (err, result) => {
     if (result.length == 1) {
-      bcrypt.compare(password, result[0].password).then((match) => {
-        if (match) {
-          // Todo make tokens with jwt
-          res.cookie("token", "something....", {
-            httpOnly: true,
-          });
-          res.status(200).end("correct password");
-        } else {
-          res.status(401).end("incorrect password");
-        }
-      });
+      const match = bcrypt.compareSync(password, result[0].password);
+
+      if (match) {
+        // Todo make tokens with jwt
+        const token = jwt.sign({ username: username }, "STRONGPASSWORD123");
+
+        res.status(200).send({ msg: "correct password", token: token });
+      } else {
+        res.status(401).end("incorrect password");
+      }
     } else {
       // register it
       res.status(404).end("user does not exist");
@@ -66,7 +67,19 @@ const Login = (req, res) => {
   });
 };
 
-const Test = (req, res) => {
-  res.end("Test world");
+const ShouldStayConnected = (req, res) => {
+  if (req.user) {
+    res.status(200).send({ msg: "connected" });
+  } else {
+    res.status(401).send({ msg: "not connected" });
+  }
 };
-module.exports = { getUsers, Register, Login, Test };
+
+const getRecipes = (req, res) => {
+  if (req.user) {
+    res.status(200).send(data);
+  } else {
+    res.status(401).send({ msg: "not connected" });
+  }
+};
+module.exports = { getUsers, Register, Login, ShouldStayConnected, getRecipes };

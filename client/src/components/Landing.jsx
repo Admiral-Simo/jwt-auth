@@ -1,6 +1,6 @@
 import React from "react";
 
-const Landing = () => {
+const Landing = ({ handleClick }) => {
   return (
     <div className="max-w-5xl mx-auto mt-10 flex flex-col md:flex-row items-center md:justify-start md:space-x-10 font-poppins text-slate-700">
       <img
@@ -13,7 +13,10 @@ const Landing = () => {
         <p className="capitalize text-2xl md:text-3xl">
           by admiral-simo for you
         </p>
-        <button className="py-2 px-5 text-black bg-yellow-200 rounded-full uppercase tracking-wider w-fit shadow-xl">
+        <button
+          onClick={handleClick}
+          className="py-2 px-5 hover:scale-90 transition duration-300 text-black bg-yellow-200 rounded-full uppercase tracking-wider w-fit shadow-xl"
+        >
           view recipes
         </button>
       </div>

@@ -6,3 +6,4 @@ module.exports = mysql.createConnection({
   password: "strongpassword123",
   database: "auth",
 });
+
